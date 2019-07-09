@@ -1,0 +1,11 @@
+{
+    "name": "alpha-team-league-bot",
+    "version": "1.0.0",
+    "description": "A bot for retrieving Starcraft Alpha Team League information",
+    "main": "bot.js",
+    "author": "Lucas Pond",
+    "dependencies": {
+        "discord.js": "^11.5.1",
+        "node-fetch": "^2.6.0"
+    }
+}
