@@ -5,6 +5,8 @@ const fetch = require('node-fetch');
 const client = new Discord.Client();
 const prefix = '!';
 
+const matchMappings = {αx: 5589, ax: 5589, ris3n: 5594, ash3s: 5599, gru: 5604, nwas: 5608, fxb: 5611, pigpan: 5614, cryptc: 5617};
+
 client.once('ready', () => {
     console.log('Ready!');
 });
@@ -17,10 +19,12 @@ client.on('message', async message => {
 
     if (command === 'match') {
         if (!args.length) {
-            return message.channel.send('You need to supply a search match number.');
+            return message.channel.send('You need to supply a search match number or the keyword "vs".');
         }
 
-        var data = await fetch("https://alpha.tl/api?match=" + args.join(" ")).then(response => response.json());
+        var matchID = args[0] == "vs" ? matchMappings[args[1].toLowerCase()] : args[0]
+
+        var data = await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
 
         if (data.error) {
             return message.channel.send(`No results found for match **${args.join(' ')}**.`);
