@@ -52,14 +52,17 @@ function displayMatchStats(matchData){
         if(matchData.datetime !== null){
             var matchDateTime = new Date(matchData.datetime);
             matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 4)
-            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " EST";
+            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " EST\n\nMatch Maps:";
+            for(var i=0;i<matchData.maps.length;i++){
+                breakDown += "\n   " + matchData.maps[i];
+            }
         }
         breakDown += "\n------------------------------------------\n";
     }else{
-
         breakDown += "Score: " + matchData.score + "\n------------------------------------------\n";
         for(var i=0;i<matchData.games.length;i++){
-            breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n";
+            breakDown += "Map: " + matchData.maps[i] + "\n"
+            breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
         }
     } 
     return breakDown;
