@@ -51,7 +51,7 @@ function displayMatchStats(matchData){
     if(matchData.score === null){
         if(matchData.datetime !== null){
             var matchDateTime = new Date(matchData.datetime);
-            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 7)
+            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 4)
             breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " EST";
         }
         breakDown += "\n------------------------------------------\n";
