@@ -5,6 +5,8 @@ const fetch = require('node-fetch');
 const client = new Discord.Client();
 const prefix = '!';
 
+const dateDisplayOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+
 const matchMappings = {αx: 5589, ax: 5589, ris3n: 5594, ash3s: 5599, gru: 5604, nwas: 5608, fxb: 5611, pigpan: 5614, cryptc: 5617};
 
 client.once('ready', () => {
@@ -45,12 +47,21 @@ client.on('message', async message => {
 });
 
 function displayMatchStats(matchData){
-    var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name +"\nScore: " + matchData.score + "\n------------------------------------------\n";
-    if(matchData.score !== null){
+    var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
+    if(matchData.score === null){
+        if(matchData.datetime !== null){
+            var matchDateTime = new Date(matchData.datetime);
+            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 7)
+            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " EST";
+        }
+        breakDown += "\n------------------------------------------\n";
+    }else{
+
+        breakDown += "Score: " + matchData.score + "\n------------------------------------------\n";
         for(var i=0;i<matchData.games.length;i++){
             breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n";
         }
-    }    
+    } 
     return breakDown;
 }
 
