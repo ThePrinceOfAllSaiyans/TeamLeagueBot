@@ -60,7 +60,8 @@ function displayMatchStats(matchData){
         breakDown += "\n------------------------------------------\n";
     }else{
         breakDown += "Score: " + matchData.score + "\n------------------------------------------\n";
-        for(var i=0;i<matchData.games.length;i++){
+        var listLength = matchData.games ? matchData.games.length : 4;
+        for(var i=0;i<listLength;i++){
             breakDown += "Map: " + matchData.maps[i] + "\n"
             breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
         }
@@ -84,6 +85,9 @@ function findMain(race, ladders){
 }
 
 function playerMatchResult(playerTeam, game, games){
+    if(!games){
+        return '';
+    }
     if(playerTeam == games[game]){
         return "Win";
     }else{
