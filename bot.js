@@ -64,7 +64,8 @@ function displayMatchStats(matchData){
             breakDown += "Map: " + matchData.maps[i] + "\n"
             breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
         }
-    } 
+    }
+    breakDown += "\nWebpage:\nhttps://alpha.tl/match/" + matchData.matchid;
     return breakDown;
 }
 
