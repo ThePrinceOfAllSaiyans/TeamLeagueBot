@@ -51,8 +51,8 @@ function displayMatchStats(matchData){
     if(matchData.score === null || matchData.score === ""){
         if(matchData.datetime !== null){
             var matchDateTime = new Date(matchData.datetime);
-            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 4)
-            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " EST\n\nMatch Maps:";
+            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 3)
+            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " ADT\n\nMatch Maps:";
             for(var i=0;i<matchData.maps.length;i++){
                 breakDown += "\n   " + matchData.maps[i];
             }
