@@ -48,7 +48,7 @@ client.on('message', async message => {
 
 function displayMatchStats(matchData){
     var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
-    if(matchData.score === null){
+    if(matchData.score === null || matchData.score === ""){
         if(matchData.datetime !== null){
             var matchDateTime = new Date(matchData.datetime);
             matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 4)
