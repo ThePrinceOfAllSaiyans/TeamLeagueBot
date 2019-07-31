@@ -115,4 +115,5 @@ function displayGroupStandings(group, letter){
     return groupString;
 }
 
+module.exports = { matchResult: playerMatchResult };
 client.login(auth.token || process.env.BOT_TOKEN);
