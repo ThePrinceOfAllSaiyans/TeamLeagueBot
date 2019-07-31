@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const auth = require('./auth.json');
+const auth = require('./dev-auth.json');
 const fetch = require('node-fetch');
 
 const client = new Discord.Client();
@@ -115,4 +115,4 @@ function displayGroupStandings(group, letter){
     return groupString;
 }
 
-client.login(auth.token);
+client.login(auth.token || process.env.BOT_TOKEN);
