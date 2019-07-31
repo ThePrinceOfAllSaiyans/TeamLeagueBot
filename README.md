@@ -23,3 +23,4 @@ Display Alpha Amateur League standings information.
 
 * [Alpha Team League API Docs](https://alpha.tl/apidocs)
 * [Discord Developer API](https://discordapp.com/developers/docs/intro)
+* [Jest Javascript Testing Framework](https://jestjs.io)
