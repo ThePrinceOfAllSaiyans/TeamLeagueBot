@@ -4,8 +4,10 @@ const fetch = require('node-fetch');
 
 const client = new Discord.Client();
 const prefix = '!';
-
 const dateDisplayOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+
+const MATCH_COMMAND = 'match';
+const STANDINGS_COMMAND = 'standings';
 
 const matchMappings = {αx: 5589, ax: 5589, ris3n: 5594, ash3s: 5599, gru: 5604, nwas: 5608, fxb: 5611, pigpan: 5614, cryptc: 5617};
 
@@ -13,38 +15,56 @@ client.once('ready', () => {
     console.log('Ready!');
 });
 
-client.on('message', async message => {
-    if (!message.content.startsWith(prefix) || message.author.bot) return;
+client.on('message', channelInput => {
+    if (!channelInput.content.startsWith(prefix) || channelInput.author.bot) return;
+    processChannelInput(channelInput); 
+});
 
-    const args = message.content.slice(prefix.length).split(/ +/);
-    const command = args.shift().toLowerCase();
+async function processChannelInput(channelInput){
+    const botResponse = await retrieveBotResponse(channelInput.content);
 
-    if (command === 'match') {
-        if (!args.length) {
-            return message.channel.send('You need to supply a search match number or the keyword "vs".');
+    channelInput.channel.send(botResponse);
+}
+
+function retrieveBotResponse(message){
+    const messageArgumentList = parseMessage(message);
+    const command = messageArgumentList.shift().toLowerCase();
+
+    const botResponse = processUserCommand(command, messageArgumentList);
+
+    return botResponse;
+}
+
+function parseMessage(message){
+    return message.slice(prefix.length).split(/ +/);
+}
+
+async function processUserCommand(command, options){
+    if (command === MATCH_COMMAND) {
+        if (!options.length) {
+            return 'You need to supply a search match number or the keyword "vs".';
         }
 
-        var matchID = args[0] == "vs" ? matchMappings[args[1].toLowerCase()] : args[0]
+        var matchID = options[0] == "vs" ? matchMappings[options[1].toLowerCase()] : options[0];
 
         var data = await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
 
         if (data.error) {
-            return message.channel.send(`No results found for match **${args.join(' ')}**.`);
+            return `No results found for match **${options.join(' ')}**.`;
         }
         
-        message.channel.send(displayMatchStats(data));
+        return displayMatchStats(data);
     }
 
-    if (command === 'standings') {
+    if (command === STANDINGS_COMMAND) {
         var data = await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
 
         if (data.error) {
-            return message.channel.send(data.error);
+            return data.error;
         }
-        
-        message.channel.send(displayStandings(data));
-    } 
-});
+        return displayStandings(data);
+    }
+}
 
 function displayMatchStats(matchData){
     var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
