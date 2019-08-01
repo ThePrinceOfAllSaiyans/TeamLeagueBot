@@ -21,49 +21,71 @@ client.on('message', channelInput => {
 });
 
 async function processChannelInput(channelInput){
-    const botResponse = await retrieveBotResponse(channelInput.content);
+    const returnedBotMessage = await botResponse(channelInput.content);
 
-    channelInput.channel.send(botResponse);
+    channelInput.channel.send(returnedBotMessage);
 }
 
-function retrieveBotResponse(message){
+function botResponse(message){
     const messageArgumentList = parseMessage(message);
     const command = messageArgumentList.shift().toLowerCase();
 
-    const botResponse = processUserCommand(command, messageArgumentList);
-
-    return botResponse;
+    return retrieveBotResponse(command, messageArgumentList);
 }
 
 function parseMessage(message){
     return message.slice(prefix.length).split(/ +/);
 }
 
-async function processUserCommand(command, options){
-    if (command === MATCH_COMMAND) {
-        if (!options.length) {
-            return 'You need to supply a search match number or the keyword "vs".';
-        }
-
-        var matchID = options[0] == "vs" ? matchMappings[options[1].toLowerCase()] : options[0];
-
-        var data = await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
-
-        if (data.error) {
-            return `No results found for match **${options.join(' ')}**.`;
-        }
-        
-        return displayMatchStats(data);
+function retrieveBotResponse(command, options){
+    switch(command){
+        case MATCH_COMMAND:
+            return matchCommandResponse(options);
+        case STANDINGS_COMMAND:
+            return standingsCommandResponse();
+        default:
+            return 'Invalid command entered.';
     }
+}
 
-    if (command === STANDINGS_COMMAND) {
-        var data = await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
-
-        if (data.error) {
-            return data.error;
-        }
-        return displayStandings(data);
+function matchCommandResponse(options){
+    if(isGeneralMatchCommand(options)){
+        let matchID = options[0];
+        return fetchMatch(matchID);
+    }else if(isTeamSpecificMatchCommand(options)){
+        let teamCode = options[1].toLowerCase();
+        let matchID = matchMappings[teamCode];
+        return fetchMatch(matchID);
+    }else{
+        return 'You need to supply a valid match number or team name with the keyword "vs".';
     }
+}
+
+function isGeneralMatchCommand(options){
+    return options.length === 1 && isNumber(options[0]);
+}
+
+function isTeamSpecificMatchCommand(options){
+    return options.length === 2 && options[0] == "vs" && options[1] in matchMappings;
+}
+
+async function fetchMatch(matchID){
+    var data = await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
+
+    if (data.error) {
+        return `No results found for match ${matchID}.`;
+    }
+    
+    return displayMatchStats(data);
+}
+
+async function standingsCommandResponse(){
+    var data = await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
+
+    if (data.error) {
+        return data.error;
+    }
+    return displayStandings(data);
 }
 
 function displayMatchStats(matchData){
@@ -133,6 +155,10 @@ function displayGroupStandings(group, letter){
         groupString += (i+1).toString() + ". " + "MP: " + currentTeam.games + ", MS: " + currentTeam.wins + "-" + currentTeam.loses + ", SS: " + currentTeam.winsets + "-" + currentTeam.losesets + ", T: " + currentTeam.clan.tag + "\n";
     }
     return groupString;
+}
+
+function isNumber(number){
+    return !isNaN(number);
 }
 
 module.exports = { matchResult: playerMatchResult };
