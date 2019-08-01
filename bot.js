@@ -49,16 +49,16 @@ function retrieveBotResponse(command, options){
 }
 
 function matchCommandResponse(options){
+    var matchID;
     if(isGeneralMatchCommand(options)){
-        let matchID = options[0];
-        return fetchMatch(matchID);
+        matchID = options[0];
     }else if(isTeamSpecificMatchCommand(options)){
         let teamCode = options[1].toLowerCase();
-        let matchID = matchMappings[teamCode];
-        return fetchMatch(matchID);
+        matchID = matchMappings[teamCode];
     }else{
         return 'You need to supply a valid match number or team name with the keyword "vs".';
     }
+    return matchMessage(matchID);
 }
 
 function isGeneralMatchCommand(options){
@@ -69,23 +69,28 @@ function isTeamSpecificMatchCommand(options){
     return options.length === 2 && options[0] == "vs" && options[1] in matchMappings;
 }
 
-async function fetchMatch(matchID){
-    var data = await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
-
+async function matchMessage(matchID){
+    var data = await fetchMatch(matchID);
     if (data.error) {
         return `No results found for match ${matchID}.`;
     }
-    
     return displayMatchStats(data);
 }
 
-async function standingsCommandResponse(){
-    var data = await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
+async function fetchMatch(matchID){
+    return await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
+}
 
+async function standingsCommandResponse(){
+    var data = await fetchStandings();
     if (data.error) {
         return data.error;
     }
     return displayStandings(data);
+}
+
+async function fetchStandings(){
+    return await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
 }
 
 function displayMatchStats(matchData){
