@@ -81,6 +81,45 @@ async function fetchMatch(matchID){
     return await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
 }
 
+function displayMatchStats(matchData){
+    var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
+    if(matchIsUpcoming(matchData.lineup1)){
+        breakDown += upcomingMatchDisplay(matchData);
+    }else{
+        breakDown += pastMatchDisplay(matchData);
+    }
+    breakDown += "\nWebpage:\nhttps://alpha.tl/match/" + matchData.matchid;
+    return breakDown;
+}
+
+function matchIsUpcoming(lineup){
+    return lineup.length === 0;
+}
+
+function upcomingMatchDisplay(matchData){
+    var matchDisplay = "";
+    if(matchData.datetime !== null){
+        var matchDateTime = new Date(matchData.datetime);
+        matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 3)
+        matchDisplay += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " ADT\n\nMatch Maps:";
+        for(var i=0;i<matchData.maps.length;i++){
+            matchDisplay += "\n   " + matchData.maps[i];
+        }
+    }
+    matchDisplay += "\n------------------------------------------\n";
+    return matchDisplay;
+}
+
+function pastMatchDisplay(matchData){
+    var matchDisplay = "Score: " + matchData.score + "\n------------------------------------------\n";
+    var listLength = matchData.games ? matchData.games.length : 4;
+    for(var i=0;i<listLength;i++){
+        matchDisplay += "Map: " + matchData.maps[i] + "\n"
+        matchDisplay += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
+    }
+    return matchDisplay;
+}
+
 async function standingsCommandResponse(){
     var data = await fetchStandings();
     if (data.error) {
@@ -91,30 +130,6 @@ async function standingsCommandResponse(){
 
 async function fetchStandings(){
     return await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
-}
-
-function displayMatchStats(matchData){
-    var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
-    if(matchData.lineup1 == []){
-        if(matchData.datetime !== null){
-            var matchDateTime = new Date(matchData.datetime);
-            matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 3)
-            breakDown += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " ADT\n\nMatch Maps:";
-            for(var i=0;i<matchData.maps.length;i++){
-                breakDown += "\n   " + matchData.maps[i];
-            }
-        }
-        breakDown += "\n------------------------------------------\n";
-    }else{
-        breakDown += "Score: " + matchData.score + "\n------------------------------------------\n";
-        var listLength = matchData.games ? matchData.games.length : 4;
-        for(var i=0;i<listLength;i++){
-            breakDown += "Map: " + matchData.maps[i] + "\n"
-            breakDown += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
-        }
-    }
-    breakDown += "\nWebpage:\nhttps://alpha.tl/match/" + matchData.matchid;
-    return breakDown;
 }
 
 function buildPlayerString(player){
