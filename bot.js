@@ -4,7 +4,6 @@ const fetch = require('node-fetch');
 
 const client = new Discord.Client();
 const prefix = '!';
-const dateDisplayOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'};
 
 const MATCH_COMMAND = 'match';
 const STANDINGS_COMMAND = 'standings';
@@ -70,14 +69,14 @@ function isTeamSpecificMatchCommand(options){
 }
 
 async function matchMessage(matchID){
-    var data = await fetchMatch(matchID);
+    var data = await fetchMatchFromAPI(matchID);
     if (data.error) {
         return `No results found for match ${matchID}.`;
     }
     return displayMatchStats(data);
 }
 
-async function fetchMatch(matchID){
+async function fetchMatchFromAPI(matchID){
     return await fetch("https://alpha.tl/api?match=" + matchID).then(response => response.json());
 }
 
@@ -97,17 +96,23 @@ function matchIsUpcoming(lineup){
 }
 
 function upcomingMatchDisplay(matchData){
-    var matchDisplay = "";
+    let matchDisplay = "";
     if(matchData.datetime !== null){
-        var matchDateTime = new Date(matchData.datetime);
-        matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 3)
-        matchDisplay += "This match is currently upcoming and scheduled for: " + matchDateTime.toLocaleString("en-US", dateDisplayOptions) + " ADT\n\nMatch Maps:";
+        let matchDateTime = convertTimeToDisplayFormat(matchData.datetime);
+        matchDisplay += "This match is currently upcoming and scheduled for: " + matchDateTime + " ADT\n\nMatch Maps:";
         for(var i=0;i<matchData.maps.length;i++){
             matchDisplay += "\n   " + matchData.maps[i];
         }
     }
     matchDisplay += "\n------------------------------------------\n";
     return matchDisplay;
+}
+
+function convertTimeToDisplayFormat(datetime){
+    let dateDisplayOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+    let matchDateTime = new Date(datetime);
+    matchDateTime.setHours(matchDateTime.getHours() + matchDateTime.getTimezoneOffset()/60 - 3)
+    return matchDateTime.toLocaleString("en-US", dateDisplayOptions);
 }
 
 function pastMatchDisplay(matchData){
@@ -118,18 +123,6 @@ function pastMatchDisplay(matchData){
         matchDisplay += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
     }
     return matchDisplay;
-}
-
-async function standingsCommandResponse(){
-    var data = await fetchStandings();
-    if (data.error) {
-        return data.error;
-    }
-    return displayStandings(data);
-}
-
-async function fetchStandings(){
-    return await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
 }
 
 function buildPlayerString(player){
@@ -155,6 +148,18 @@ function playerMatchResult(playerTeam, game, games){
     }else{
         return "Loss";
     }
+}
+
+async function standingsCommandResponse(){
+    var data = await fetchStandingsFromAPI();
+    if (data.error) {
+        return data.error;
+    }
+    return displayStandings(data);
+}
+
+async function fetchStandingsFromAPI(){
+    return await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
 }
 
 function displayStandings(standingData){
