@@ -209,23 +209,27 @@ async function fetchStandingsFromAPI(){
 }
 
 function displayStandings(standingData){
-    var groupLetters = ['A', 'B'];
-    var standingString = "";
-    for(var i=0;i<standingData.groups.length;i++){
-        standingString += displayGroupStandings(standingData.groups[i], groupLetters[i]) + "\n"
-    }
-    standingString += "Webpage:\n"
-    return standingString + "https://alpha.tl/americasamateur";
+    let groupA = standingData.groups[0];
+    let groupB = standingData.groups[1];
+    return displayGroupStandings("A", groupA) + displayGroupStandings("B", groupB) + tournamentPageLink();
 }
 
-function displayGroupStandings(group, letter){
-    var groupString = "Group " + letter + "\n"
-    var currentGroup;
-    for(var i=0;i<group.length;i++){
-        currentTeam = group[i];
-        groupString += (i+1).toString() + ". " + "MP: " + currentTeam.games + ", MS: " + currentTeam.wins + "-" + currentTeam.loses + ", SS: " + currentTeam.winsets + "-" + currentTeam.losesets + ", T: " + currentTeam.clan.tag + "\n";
-    }
-    return groupString;
+function tournamentPageLink(){
+    return "Webpage:\nhttps://alpha.tl/americasamateur";
+}
+
+function displayGroupStandings(letter, group){
+    return groupHeader(letter) + groupTeamRows(group) + "\n";
+}
+
+function groupHeader(letter){
+    return "Group " + letter + "\n";
+}
+
+function groupTeamRows(group){
+    return group.map((team, rank) => {
+        return (rank+1).toString() + ". " + "MP: " + team.games + ", MS: " + team.wins + "-" + team.loses + ", SS: " + team.winsets + "-" + team.losesets + ", T: " + team.clan.tag + "\n";
+    }).join("");
 }
 
 function isNumber(number){
