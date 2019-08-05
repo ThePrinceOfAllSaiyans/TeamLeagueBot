@@ -1,5 +1,5 @@
-const { matchResult } = require('./bot')
+const { gameResult } = require('./bot')
 
 test('test', () => {
-	expect(matchResult('', '', '')).toBe('');
+	expect(gameResult('', '', '')).toBe('');
 });

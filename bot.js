@@ -48,16 +48,16 @@ function retrieveBotResponse(command, options){
 }
 
 function matchCommandResponse(options){
-    var matchID;
     if(isGeneralMatchCommand(options)){
-        matchID = options[0];
+        let matchID = options[0];
+        return matchMessage(matchID);
     }else if(isTeamSpecificMatchCommand(options)){
         let teamCode = options[1].toLowerCase();
-        matchID = matchMappings[teamCode];
+        let matchID = matchMappings[teamCode];
+        return matchMessage(matchID);
     }else{
         return 'You need to supply a valid match number or team name with the keyword "vs".';
     }
-    return matchMessage(matchID);
 }
 
 function isGeneralMatchCommand(options){
@@ -81,31 +81,56 @@ async function fetchMatchFromAPI(matchID){
 }
 
 function displayMatchStats(matchData){
-    var breakDown = matchData.team1.name + "   vs   " + matchData.team2.name + "\n";
     if(matchIsUpcoming(matchData.lineup1)){
-        breakDown += upcomingMatchDisplay(matchData);
+        return upcomingMatchDisplay(matchData);
+    }else if(matchIsInProgress(matchData.games)){
+        return inProgressMatchDisplay(matchData);
     }else{
-        breakDown += pastMatchDisplay(matchData);
+        return pastMatchDisplay(matchData);
     }
-    breakDown += "\nWebpage:\nhttps://alpha.tl/match/" + matchData.matchid;
-    return breakDown;
 }
 
 function matchIsUpcoming(lineup){
     return lineup.length === 0;
 }
 
+function matchIsInProgress(games){
+    return !games;
+}
+
 function upcomingMatchDisplay(matchData){
-    let matchDisplay = "";
-    if(matchData.datetime !== null){
-        let matchDateTime = convertTimeToDisplayFormat(matchData.datetime);
-        matchDisplay += "This match is currently upcoming and scheduled for: " + matchDateTime + " ADT\n\nMatch Maps:";
-        for(var i=0;i<matchData.maps.length;i++){
-            matchDisplay += "\n   " + matchData.maps[i];
-        }
+    return teamVersusTeamHeader(matchData.team1.name, matchData.team2.name) + 
+            matchDateDisplay(matchData.datetime) + 
+            displayMaps(matchData.maps) + 
+            displayDivider() + 
+            matchPageLink(matchData.matchid);
+}
+
+function inProgressMatchDisplay(matchData){
+    return teamVersusTeamHeader(matchData.team1.name, matchData.team2.name) + 
+            displayDivider() + 
+            displayResultSection(matchData) + 
+            matchPageLink(matchData.matchid);
+}
+
+function pastMatchDisplay(matchData){
+    return teamVersusTeamHeader(matchData.team1.name, matchData.team2.name) +
+            displayScore(matchData.score) + 
+            displayDivider() + 
+            displayResultSection(matchData) + 
+            matchPageLink(matchData.matchid);
+}
+
+function teamVersusTeamHeader(team1, team2){
+    return team1 + "   vs   " + team2 + "\n";
+}
+
+function matchDateDisplay(datetime){
+    if(datetime !== null){
+        return "This match is currently upcoming and scheduled for: " + convertTimeToDisplayFormat(datetime) + " ADT\n";
+    }else{
+        return "";
     }
-    matchDisplay += "\n------------------------------------------\n";
-    return matchDisplay;
 }
 
 function convertTimeToDisplayFormat(datetime){
@@ -115,14 +140,38 @@ function convertTimeToDisplayFormat(datetime){
     return matchDateTime.toLocaleString("en-US", dateDisplayOptions);
 }
 
-function pastMatchDisplay(matchData){
-    var matchDisplay = "Score: " + matchData.score + "\n------------------------------------------\n";
-    var listLength = matchData.games ? matchData.games.length : 4;
-    for(var i=0;i<listLength;i++){
-        matchDisplay += "Map: " + matchData.maps[i] + "\n"
-        matchDisplay += buildPlayerString(matchData.lineup1[i]) + " " + playerMatchResult(1, i, matchData.games) +  "   vs   " + playerMatchResult(2, i, matchData.games) + " " + buildPlayerString(matchData.lineup2[i]) + "\n\n";
-    }
-    return matchDisplay;
+function displayMaps(maps){
+    return "\nMatch Maps:\n   " + maps.join("\n   ");
+}
+
+function displayDivider(){
+    return "\n------------------------------------------\n";
+}
+
+function matchPageLink(matchID){
+    return "\nWebpage:\nhttps://alpha.tl/match/" + matchID;
+}
+
+function displayScore(score){
+    return "Score: " + score;
+}
+
+function displayResultSection(matchData){
+    return matchData.games.map((winner, gameNum) => {
+        let player1 = matchData.lineup1[gameNum];
+        let player2 = matchData.lineup2[gameNum];
+        return displayMap(matchData.maps[gameNum]) + displayGameResult(winner, player1, player2);
+    }).join("");
+}
+
+function displayMap(map){
+    return "Map: " + map + "\n";
+}
+
+function displayGameResult(winner, player1, player2){
+    let player1Team = 0;
+    let player2Team = 1;
+    return buildPlayerString(player1) + " " + playerGameResult(winner, player1Team) +  "   vs   " + playerGameResult(winner, player2Team) + " " + buildPlayerString(player2) + "\n\n";
 }
 
 function buildPlayerString(player){
@@ -139,11 +188,8 @@ function findMain(race, ladders){
     return "Unknown";
 }
 
-function playerMatchResult(playerTeam, game, games){
-    if(!games){
-        return '';
-    }
-    if(playerTeam == games[game]){
+function playerGameResult(winner, player){
+    if(winner === player){
         return "Win";
     }else{
         return "Loss";
@@ -186,5 +232,5 @@ function isNumber(number){
     return !isNaN(number);
 }
 
-module.exports = { matchResult: playerMatchResult };
+module.exports = { matchResult: playerGameResult };
 client.login(auth.token || process.env.BOT_TOKEN);
