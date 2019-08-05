@@ -1,9 +1,10 @@
 const Discord = require('discord.js');
-const auth = require('./dev-auth.json');
+const developerAuth = require('./dev-auth.json');
 const fetch = require('node-fetch');
 
 const client = new Discord.Client();
 const prefix = '!';
+const developerPrefix = '*';
 
 const MATCH_COMMAND = 'match';
 const STANDINGS_COMMAND = 'standings';
@@ -15,9 +16,17 @@ client.once('ready', () => {
 });
 
 client.on('message', channelInput => {
-    if (!channelInput.content.startsWith(prefix) || channelInput.author.bot) return;
+    if (nonBotRelatedUserMessage(channelInput, developerAuth.token)) return;
     processChannelInput(channelInput); 
 });
+
+function nonBotRelatedUserMessage(channelInput, token){
+    if(token){
+        return !channelInput.content.startsWith(developerPrefix) || channelInput.author.bot;
+    }else{
+        return !channelInput.content.startsWith(prefix) || channelInput.author.bot;
+    }
+}
 
 async function processChannelInput(channelInput){
     const returnedBotMessage = await botResponse(channelInput.content);
@@ -237,4 +246,4 @@ function isNumber(number){
 }
 
 module.exports = { matchResult: playerGameResult };
-client.login(auth.token || process.env.BOT_TOKEN);
+client.login(developerAuth.token || process.env.BOT_TOKEN);
