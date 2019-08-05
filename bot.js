@@ -6,7 +6,7 @@ const client = new Discord.Client();
 const prefix = '!';
 const developerPrefix = '*';
 
-const reactionChannelID = '597944806295076895';
+const reactionChannelID = developerAuth.reaction_channel_id || process.env.REACTION_CHANNEL_ID;
 
 const MATCH_COMMAND = 'match';
 const STANDINGS_COMMAND = 'standings';
