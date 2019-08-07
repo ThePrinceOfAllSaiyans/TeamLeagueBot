@@ -25,33 +25,26 @@ client.on('messageReactionAdd', (reaction, user) => {
     let botMember = reaction.message.member;
     let userMember = botMember.guild.members.find(member => member.user === user);
     let emojiName = reaction._emoji.name;
-    userMember.addRole(botMember.guild.roles.find(role => role.name === emojiName));
+    userMember.addRole(userMember.guild.roles.find(role => role.name === emojiName));
 });
  
 client.on('messageReactionRemove', (reaction, user) => {
     let botMember = reaction.message.member;
     let userMember = botMember.guild.members.find(member => member.user === user);
     let emojiName = reaction._emoji.name;
-    userMember.removeRole(botMember.guild.roles.find(role => role.name === emojiName));
+    userMember.removeRole(userMember.guild.roles.find(role => role.name === emojiName));
 });
 
 // Credit to https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/raw-events.md
 client.on('raw', packet => {
-    // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
-    // Grab the channel to check the message from
     const channel = client.channels.get(packet.d.channel_id);
-    // There's no need to emit if the message is cached, because the event will fire anyway for that
     if (channel.messages.has(packet.d.message_id) || channel.id !== reactionChannelID) return;
-    // Since we have confirmed the message is not cached, let's fetch it
     channel.fetchMessage(packet.d.message_id).then(message => {
-        // Emojis can have identifiers of name:id format, so we have to account for that case as well
         const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
-        // This gives us the reaction we need to emit the event properly, in top of the message object
         const reaction = message.reactions.get(emoji);
-        // Adds the currently reacting user to the reaction's users collection.
+
         if (reaction) reaction.users.set(packet.d.user_id, client.guilds.users.get(packet.d.user_id));
-        // Check which type of event it is before emitting
         if (packet.t === 'MESSAGE_REACTION_ADD') {
             client.emit('messageReactionAdd', reaction, client.users.get(packet.d.user_id));
         }
@@ -62,24 +55,33 @@ client.on('raw', packet => {
 });
 
 async function processChannelInput(channelInput){
+    if(nonBotRelatedUserMessage(channelInput, developerAuth.token)){ return;}
     if(channelInput.author.bot){
-        if(channelInput.channel.id === reactionChannelID && channelInput.content.startsWith('>>> **Select your Race**')){
-            let guild = channelInput.channel.guild;
-            channelInput.react(getRaceEmoji(guild, "Terran").id);
-            channelInput.react(getRaceEmoji(guild, "Protoss").id);
-            channelInput.react(getRaceEmoji(guild, "Zerg").id);
-            channelInput.react(getRaceEmoji(guild, "Random").id);
-        }
-        return;
-    }
-    if(channelInput.channel.id === reactionChannelID){
+        setupRaceReactionsOnMessage(channelInput);
+    }else if(channelInput.channel.id === reactionChannelID){
         setupReactionRoleMessages(channelInput);
-        return;
-    } 
-    if(nonBotRelatedUserMessage(channelInput, developerAuth.token)) return;
-    const returnedBotMessage = await botResponse(channelInput.content);
+    }else{
+        const returnedBotMessage = await botResponse(channelInput.content);
+        channelInput.channel.send(returnedBotMessage);
+    }
+}
 
-    channelInput.channel.send(returnedBotMessage);
+function nonBotRelatedUserMessage(channelInput, token){
+    if(token){
+        return !channelInput.content.startsWith(developerPrefix);
+    }else{
+        return !channelInput.content.startsWith(prefix);
+    }
+}
+
+function setupRaceReactionsOnMessage(channelInput){
+    if(channelInput.content.startsWith('>>> **Select your Race**')){
+        let guild = channelInput.channel.guild;
+        channelInput.react(getRaceEmoji(guild, "Terran").id);
+        channelInput.react(getRaceEmoji(guild, "Protoss").id);
+        channelInput.react(getRaceEmoji(guild, "Zerg").id);
+        channelInput.react(getRaceEmoji(guild, "Random").id);
+    }
 }
 
 function setupReactionRoleMessages(channelInput){
@@ -104,14 +106,6 @@ function displayRaceEmoji(guild, race){
 
 function getRaceEmoji(guild, race){
     return guild.emojis.find(emoji => emoji.name === race);
-}
-
-function nonBotRelatedUserMessage(channelInput, token){
-    if(token){
-        return !channelInput.content.startsWith(developerPrefix);
-    }else{
-        return !channelInput.content.startsWith(prefix);
-    }
 }
 
 function botResponse(message){
