@@ -55,11 +55,12 @@ client.on('raw', packet => {
 });
 
 async function processChannelInput(channelInput){
-    if(nonBotRelatedUserMessage(channelInput, developerAuth.token)){ return;}
     if(channelInput.author.bot){
         setupRaceReactionsOnMessage(channelInput);
     }else if(channelInput.channel.id === reactionChannelID){
         setupReactionRoleMessages(channelInput);
+    }else if(nonBotRelatedUserMessage(channelInput, developerAuth.token)){ 
+        return;
     }else{
         const returnedBotMessage = await botResponse(channelInput.content);
         channelInput.channel.send(returnedBotMessage);
