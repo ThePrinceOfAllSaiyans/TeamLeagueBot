@@ -289,7 +289,7 @@ async function standingsCommandResponse(){
 }
 
 async function fetchStandingsFromAPI(){
-    return await fetch("https://alpha.tl/api?tournament=50").then(response => response.json());
+    return await fetch("https://alpha.tl/api?tournament=58").then(response => response.json());
 }
 
 function displayStandings(standingData){
